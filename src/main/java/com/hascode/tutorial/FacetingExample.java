@@ -3,6 +3,7 @@ package com.hascode.tutorial;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -48,40 +49,98 @@ public class FacetingExample {
 				analyzer);
 		iwc.setOpenMode(OpenMode.CREATE);
 		IndexWriter writer = new IndexWriter(dir, iwc);
-
 		TaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir,
 				OpenMode.CREATE_OR_APPEND);
-		Document doc = new Document();
-		doc.add(new StringField("title", "Tom Sawyer", Store.YES));
-		List<CategoryPath> categories = new ArrayList<CategoryPath>();
-		categories.add(new CategoryPath("author", "Mark Twain"));
-		categories.add(new CategoryPath("year", "2010"));
-		CategoryDocumentBuilder categoryDocBuilder = new CategoryDocumentBuilder(
-				taxoWriter);
-		categoryDocBuilder.setCategoryPaths(categories);
-		categoryDocBuilder.build(doc);
-		writer.addDocument(doc);
+
+		List<Book> books = Arrays.asList(new Book("Tom Sawyer", "Mark Twain",
+				"1840", "Novel"), new Book("Collected Tales", "Mark Twain",
+				"1850", "Novel"), new Book("The Trial", "Franz Kafka", "1901",
+				"Novel"));
+
+		createDocuments(writer, taxoWriter, books);
+		taxoWriter.commit();
+		writer.commit();
 		writer.close();
 		taxoWriter.close();
 
 		IndexReader indexReader = DirectoryReader.open(dir);
 		IndexSearcher searcher = new IndexSearcher(indexReader);
 		TaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
-		Query q = new TermQuery(new Term("title", "Tom Sawyer"));
+		Query q = new TermQuery(new Term("category", "Novel"));
 		TopScoreDocCollector tdc = TopScoreDocCollector.create(10, true);
 		FacetSearchParams facetSearchParams = new FacetSearchParams();
 		facetSearchParams.addFacetRequest(new CountFacetRequest(
 				new CategoryPath("author"), 10));
+		facetSearchParams.addFacetRequest(new CountFacetRequest(
+				new CategoryPath("category"), 10));
+		facetSearchParams.addFacetRequest(new CountFacetRequest(
+				new CategoryPath("published"), 10));
 		FacetsCollector facetsCollector = new FacetsCollector(
 				facetSearchParams, indexReader, taxoReader);
 		searcher.search(q, MultiCollector.wrap(tdc, facetsCollector));
 		List<FacetResult> res = facetsCollector.getFacetResults();
-		System.out.println("results: " + res.size());
+		System.out
+				.println("Search for books with the category:Novel returned : "
+						+ res.size()
+						+ "results\n---------------------------------");
 		for (final FacetResult r : res) {
-			System.out.println("x " + r.getFacetResultNode().getLabel());
+			System.out.println("\nMatching "
+					+ r.getFacetResultNode().getLabel()
+					+ ":\n------------------------------------");
 			for (FacetResultNode n : r.getFacetResultNode().getSubResults()) {
-				System.out.println("\t" + n.getLabel() + ": " + n.getValue());
+				System.out.println(String.format("\t%s: %.0f", n.getLabel()
+						.lastComponent(), n.getValue()));
 			}
+		}
+	}
+
+	private static void createDocuments(final IndexWriter writer,
+			final TaxonomyWriter taxoWriter, final List<Book> books)
+			throws IOException {
+		for (final Book b : books) {
+			Document doc = new Document();
+			doc.add(new StringField("title", b.getTitle(), Store.YES));
+			doc.add(new StringField("category", b.getCategory(), Store.YES));
+			List<CategoryPath> categories = new ArrayList<CategoryPath>();
+			categories.add(new CategoryPath("author", b.getAuthor()));
+			categories.add(new CategoryPath("category", b.getCategory()));
+			categories.add(new CategoryPath("published", b.getPublished()));
+			CategoryDocumentBuilder categoryDocBuilder = new CategoryDocumentBuilder(
+					taxoWriter);
+			categoryDocBuilder.setCategoryPaths(categories);
+			categoryDocBuilder.build(doc);
+			writer.addDocument(doc);
+		}
+	}
+
+	public static class Book {
+		private final String title;
+		private final String author;
+		private final String published;
+		private final String category;
+
+		public Book(final String title, final String author,
+				final String published, final String category) {
+			this.title = title;
+			this.author = author;
+			this.published = published;
+			this.category = category;
+		}
+
+		public String getTitle() {
+			return title;
+		}
+
+		public String getAuthor() {
+			return author;
+		}
+
+		public String getPublished() {
+			return published;
+		}
+
+		public String getCategory() {
+			return category;
 		}
 	}
 }
