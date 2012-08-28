@@ -52,10 +52,12 @@ public class FacetingExample {
 		TaxonomyWriter taxoWriter = new DirectoryTaxonomyWriter(taxoDir,
 				OpenMode.CREATE_OR_APPEND);
 
-		List<Book> books = Arrays.asList(new Book("Tom Sawyer", "Mark Twain",
-				"1840", "Novel"), new Book("Collected Tales", "Mark Twain",
-				"1850", "Novel"), new Book("The Trial", "Franz Kafka", "1901",
-				"Novel"));
+		List<Book> books = Arrays
+				.asList(new Book("Tom Sawyer", "Mark Twain", "1840", "Novel"),
+						new Book("Collected Tales", "Mark Twain", "1850",
+								"Novel"), new Book("The Trial", "Franz Kafka",
+								"1901", "Novel"), new Book("Some book",
+								"Some author", "1901", "Novel"));
 
 		createDocuments(writer, taxoWriter, books);
 		taxoWriter.commit();
@@ -82,7 +84,7 @@ public class FacetingExample {
 		System.out
 				.println("Search for books with the category:Novel returned : "
 						+ res.size()
-						+ "results\n---------------------------------");
+						+ " results\n---------------------------------");
 		for (final FacetResult r : res) {
 			System.out.println("\nMatching "
 					+ r.getFacetResultNode().getLabel()
