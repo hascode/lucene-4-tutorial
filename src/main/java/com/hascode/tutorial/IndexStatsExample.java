@@ -18,6 +18,7 @@ import org.apache.lucene.search.CollectionStatistics;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
 
 public class IndexStatsExample {
@@ -25,8 +26,7 @@ public class IndexStatsExample {
 
 	public static void main(final String[] args) throws IOException {
 		createRandomData();
-
-		IndexReader reader = DirectoryReader.open(FSDirectory.open(new File(
+		IndexReader reader = DirectoryReader.open(MMapDirectory.open(new File(
 				INDEX)));
 		IndexSearcher searcher = new IndexSearcher(reader);
 		CollectionStatistics stats = searcher.collectionStatistics("title");

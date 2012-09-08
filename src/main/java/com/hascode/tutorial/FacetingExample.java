@@ -34,7 +34,7 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopScoreDocCollector;
 import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.FSDirectory;
+import org.apache.lucene.store.MMapDirectory;
 import org.apache.lucene.util.Version;
 
 public class FacetingExample {
@@ -42,8 +42,8 @@ public class FacetingExample {
 	private static final String INDEX_TAXO = "target/facet/taxo";
 
 	public static void main(final String[] args) throws IOException {
-		Directory dir = FSDirectory.open(new File(INDEX));
-		Directory taxoDir = FSDirectory.open(new File(INDEX_TAXO));
+		Directory dir = MMapDirectory.open(new File(INDEX));
+		Directory taxoDir = MMapDirectory.open(new File(INDEX_TAXO));
 		Analyzer analyzer = new StandardAnalyzer(Version.LUCENE_40);
 		IndexWriterConfig iwc = new IndexWriterConfig(Version.LUCENE_40,
 				analyzer);
